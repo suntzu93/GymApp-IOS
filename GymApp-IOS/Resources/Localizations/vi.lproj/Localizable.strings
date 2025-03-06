@@ -1,0 +1,84 @@
+// Common
+"app_name" = "Dinh Dưỡng Gym";
+"save" = "Lưu";
+"cancel" = "Hủy";
+"done" = "Xong";
+"error" = "Lỗi";
+"loading" = "Đang tải...";
+"success" = "Thành công";
+"retry" = "Thử lại";
+
+// Tab Bar
+"daily_tab" = "Hàng ngày";
+"food_tab" = "Thực phẩm";
+"profile_tab" = "Hồ sơ";
+
+// Onboarding
+"onboarding_title" = "Chào mừng đến với Dinh Dưỡng Gym";
+"onboarding_subtitle" = "Hãy thiết lập hồ sơ của bạn để nhận kế hoạch dinh dưỡng cá nhân";
+"personal_info" = "Thông tin cá nhân";
+"gender" = "Giới tính";
+"male" = "Nam";
+"female" = "Nữ";
+"age" = "Tuổi";
+"height" = "Chiều cao (cm)";
+"weight" = "Cân nặng (kg)";
+"activity_level" = "Mức độ vận động";
+"activity_low" = "Thấp";
+"activity_medium" = "Trung bình";
+"activity_high" = "Cao";
+"goal" = "Mục tiêu";
+"goal_lose" = "Giảm cân";
+"goal_maintain" = "Giữ cân";
+"goal_gain" = "Tăng cân";
+"country" = "Quốc gia";
+"city" = "Thành phố";
+"register_button" = "Tính toán kế hoạch dinh dưỡng";
+"registration_success" = "Kế hoạch dinh dưỡng của bạn đã sẵn sàng!";
+
+// Daily Nutrition
+"daily_nutrition_title" = "Dinh dưỡng hôm nay";
+"daily_goal" = "Mục tiêu hàng ngày";
+"consumed" = "Đã tiêu thụ";
+"remaining" = "Còn lại";
+"calories" = "Calo";
+"protein" = "Protein";
+"fat" = "Chất béo";
+"carbs" = "Carbs";
+"add_meal" = "Thêm bữa ăn";
+"suggest_next_meal" = "Gợi ý bữa tiếp theo";
+"g" = "g";
+"kcal" = "kcal";
+
+// Food List
+"food_list_title" = "Thực phẩm phổ biến";
+"search_food" = "Tìm kiếm thực phẩm";
+"add_to_favorites" = "Thêm vào yêu thích";
+"hide_food" = "Ẩn món này";
+"no_foods_found" = "Không tìm thấy thực phẩm";
+
+// Add Meal
+"add_meal_title" = "Thêm bữa ăn";
+"meal_type" = "Loại bữa ăn";
+"breakfast" = "Bữa sáng";
+"lunch" = "Bữa trưa";
+"dinner" = "Bữa tối";
+"snack" = "Bữa nhẹ";
+"add_food" = "Thêm thực phẩm";
+"quantity" = "Số lượng";
+"confirm_meal" = "Xác nhận bữa ăn";
+"meal_added_success" = "Đã thêm bữa ăn thành công";
+
+// Food Suggestions
+"suggestions_title" = "Thực phẩm gợi ý";
+"suggestions_subtitle" = "Dựa trên mục tiêu dinh dưỡng còn lại của bạn";
+"add_to_meal" = "Thêm vào bữa ăn";
+"no_suggestions" = "Không có gợi ý nào";
+
+// Profile
+"profile_title" = "Hồ sơ của tôi";
+"edit_profile" = "Chỉnh sửa hồ sơ";
+"language" = "Ngôn ngữ";
+"logout" = "Đăng xuất";
+"meal_history" = "Lịch sử bữa ăn";
+"no_meal_history" = "Không có lịch sử bữa ăn"; 

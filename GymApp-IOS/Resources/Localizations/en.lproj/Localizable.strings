@@ -1,0 +1,84 @@
+// Common
+"app_name" = "Gym Nutrition";
+"save" = "Save";
+"cancel" = "Cancel";
+"done" = "Done";
+"error" = "Error";
+"loading" = "Loading...";
+"success" = "Success";
+"retry" = "Retry";
+
+// Tab Bar
+"daily_tab" = "Daily";
+"food_tab" = "Foods";
+"profile_tab" = "Profile";
+
+// Onboarding
+"onboarding_title" = "Welcome to Gym Nutrition";
+"onboarding_subtitle" = "Let's set up your profile to get personalized nutrition plans";
+"personal_info" = "Personal Information";
+"gender" = "Gender";
+"male" = "Male";
+"female" = "Female";
+"age" = "Age";
+"height" = "Height (cm)";
+"weight" = "Weight (kg)";
+"activity_level" = "Activity Level";
+"activity_low" = "Low";
+"activity_medium" = "Medium";
+"activity_high" = "High";
+"goal" = "Goal";
+"goal_lose" = "Lose Weight";
+"goal_maintain" = "Maintain Weight";
+"goal_gain" = "Gain Weight";
+"country" = "Country";
+"city" = "City";
+"register_button" = "Calculate My Nutrition Plan";
+"registration_success" = "Your nutrition plan is ready!";
+
+// Daily Nutrition
+"daily_nutrition_title" = "Today's Nutrition";
+"daily_goal" = "Daily Goal";
+"consumed" = "Consumed";
+"remaining" = "Remaining";
+"calories" = "Calories";
+"protein" = "Protein";
+"fat" = "Fat";
+"carbs" = "Carbs";
+"add_meal" = "Add Meal";
+"suggest_next_meal" = "Suggest Next Meal";
+"g" = "g";
+"kcal" = "kcal";
+
+// Food List
+"food_list_title" = "Popular Foods";
+"search_food" = "Search Foods";
+"add_to_favorites" = "Add to Favorites";
+"hide_food" = "Hide This Food";
+"no_foods_found" = "No foods found";
+
+// Add Meal
+"add_meal_title" = "Add Meal";
+"meal_type" = "Meal Type";
+"breakfast" = "Breakfast";
+"lunch" = "Lunch";
+"dinner" = "Dinner";
+"snack" = "Snack";
+"add_food" = "Add Food";
+"quantity" = "Quantity";
+"confirm_meal" = "Confirm Meal";
+"meal_added_success" = "Meal added successfully";
+
+// Food Suggestions
+"suggestions_title" = "Suggested Foods";
+"suggestions_subtitle" = "Based on your remaining nutrition goals";
+"add_to_meal" = "Add to Meal";
+"no_suggestions" = "No suggestions available";
+
+// Profile
+"profile_title" = "My Profile";
+"edit_profile" = "Edit Profile";
+"language" = "Language";
+"logout" = "Logout";
+"meal_history" = "Meal History";
+"no_meal_history" = "No meal history available"; 
