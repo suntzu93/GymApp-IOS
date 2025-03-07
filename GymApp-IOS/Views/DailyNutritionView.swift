@@ -91,27 +91,29 @@ struct DailyNutritionView: View {
                                             .padding(.horizontal)
                                         
                                         ForEach(todayMeals) { meal in
-                                            HStack {
-                                                VStack(alignment: .leading) {
-                                                    Text(meal.mealName)
-                                                        .font(.subheadline)
-                                                        .fontWeight(.semibold)
+                                            NavigationLink(destination: MealDetailView(mealId: meal.mealId, userId: userPresenter.user?.id ?? "")) {
+                                                HStack {
+                                                    VStack(alignment: .leading) {
+                                                        Text(meal.mealName)
+                                                            .font(.subheadline)
+                                                            .fontWeight(.semibold)
+                                                        
+                                                        Text(formatTime(from: meal.createdAt))
+                                                            .font(.caption)
+                                                            .foregroundColor(.secondary)
+                                                    }
                                                     
-                                                    Text(formatTime(from: meal.createdAt))
-                                                        .font(.caption)
+                                                    Spacer()
+                                                    
+                                                    Text("\(meal.totalCalories) kcal")
+                                                        .font(.subheadline)
                                                         .foregroundColor(.secondary)
                                                 }
-                                                
-                                                Spacer()
-                                                
-                                                Text("\(meal.totalCalories) kcal")
-                                                    .font(.subheadline)
-                                                    .foregroundColor(.secondary)
+                                                .padding()
+                                                .background(Color(uiColor: .systemBackground))
+                                                .cornerRadius(10)
+                                                .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
                                             }
-                                            .padding()
-                                            .background(Color(uiColor: .systemBackground))
-                                            .cornerRadius(10)
-                                            .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
                                             .contextMenu {
                                                 Button(role: .destructive) {
                                                     print("Context menu: Delete meal with ID: \(meal.mealId)")
@@ -196,6 +198,14 @@ struct DailyNutritionView: View {
                         }
                     )
                     .padding(.top, 50) // Add padding to position below navigation bar
+                    .onAppear {
+                        // Auto-dismiss the toast after 2 seconds
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                            withAnimation {
+                                mealPresenter.showToast = false
+                            }
+                        }
+                    }
                     
                     Spacer()
                 }

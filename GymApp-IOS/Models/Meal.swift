@@ -90,6 +90,7 @@ struct MealResponse: Codable {
         var protein: Double
         var fat: Double
         var carbs: Double
+        var foodName: String?
         
         enum CodingKeys: String, CodingKey {
             case id
@@ -101,6 +102,7 @@ struct MealResponse: Codable {
             case protein
             case fat
             case carbs
+            case foodName = "food_name"
         }
     }
     
@@ -248,6 +250,7 @@ struct MealHistoryResponse: Codable {
         var protein: Double
         var fat: Double
         var carbs: Double
+        var foodName: String?
         
         enum CodingKeys: String, CodingKey {
             case id
@@ -259,6 +262,58 @@ struct MealHistoryResponse: Codable {
             case protein
             case fat
             case carbs
+            case foodName = "food_name"
         }
+    }
+}
+
+// Model for meal detail response
+struct MealDetailResponse: Codable, Identifiable {
+    var id: Int
+    var userId: Int
+    var mealName: String
+    var totalCalories: Int
+    var totalProtein: Double
+    var totalFat: Double
+    var totalCarbs: Double
+    var createdAt: String
+    var items: [MealItemDetail]
+    
+    struct MealItemDetail: Codable, Identifiable {
+        var id: Int
+        var mealId: Int
+        var foodId: Int
+        var quantity: Double
+        var portionSize: Double
+        var calories: Int
+        var protein: Double
+        var fat: Double
+        var carbs: Double
+        var foodName: String
+        
+        enum CodingKeys: String, CodingKey {
+            case id
+            case mealId = "meal_id"
+            case foodId = "food_id"
+            case quantity
+            case portionSize = "portion_size"
+            case calories
+            case protein
+            case fat
+            case carbs
+            case foodName = "food_name"
+        }
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case userId = "user_id"
+        case mealName = "meal_name"
+        case totalCalories = "total_calories"
+        case totalProtein = "total_protein"
+        case totalFat = "total_fat"
+        case totalCarbs = "total_carbs"
+        case createdAt = "created_at"
+        case items
     }
 } 

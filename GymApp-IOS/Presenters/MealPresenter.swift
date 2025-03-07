@@ -15,6 +15,10 @@ class MealPresenter: ObservableObject {
     @Published var toastMessage = ""
     @Published var toastIsSuccess = true
     
+    @Published var selectedMealDetail: MealDetailResponse?
+    @Published var isFetchingMealDetail = false
+    @Published var mealDetailError: String?
+    
     private let apiService = APIService.shared
     public var cancellables = Set<AnyCancellable>()
     
@@ -275,6 +279,28 @@ class MealPresenter: ObservableObject {
                 
                 // Fetch updated meal history to ensure everything is in sync
                 self.fetchMealHistory(userId: userId)
+            }
+            .store(in: &cancellables)
+    }
+    
+    func getMealDetails(mealId: String, userId: String) {
+        isFetchingMealDetail = true
+        mealDetailError = nil
+        
+        apiService.getMealDetails(mealId: mealId, userId: userId)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                self?.isFetchingMealDetail = false
+                
+                if case .failure(let error) = completion {
+                    self?.mealDetailError = error.message
+                    print("Error fetching meal details: \(error.message)")
+                }
+            } receiveValue: { [weak self] response in
+                guard let self = self else { return }
+                
+                print("Successfully received meal details for meal ID: \(response.id)")
+                self.selectedMealDetail = response
             }
             .store(in: &cancellables)
     }

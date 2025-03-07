@@ -176,8 +176,6 @@ class APIService {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         
-        // Create a custom decoder
-        let customDecoder = JSONDecoder()
         
         return URLSession.shared.dataTaskPublisher(for: request)
             .mapError { APIError.networkError($0) }
@@ -217,6 +215,43 @@ class APIService {
     }
     
     // MARK: - Meal API
+    
+    func getMealDetails(mealId: String, userId: String) -> AnyPublisher<MealDetailResponse, APIError> {
+        let timestamp = getCurrentTimestamp()
+        let mealIdInt = Int(mealId) ?? 0
+        let userIdInt = Int(userId) ?? 0
+        let endpoint = "\(baseURL)/meals/\(mealIdInt)?user_id=\(userIdInt)&client_timestamp=\(timestamp)"
+        
+        print("Fetching meal details from: \(endpoint)")
+        
+        guard let url = URL(string: endpoint) else {
+            return Fail(error: APIError.invalidURL).eraseToAnyPublisher()
+        }
+        
+        // Create a custom decoder without automatic snake_case conversion
+        let customDecoder = JSONDecoder()
+        
+        return URLSession.shared.dataTaskPublisher(for: url)
+            .mapError { APIError.networkError($0) }
+            .map { data, response -> Data in
+                // Debug: Print the raw response data
+                if let jsonString = String(data: data, encoding: .utf8) {
+                    print("Raw meal details response: \(jsonString)")
+                }
+                return data
+            }
+            .decode(type: MealDetailResponse.self, decoder: customDecoder)
+            .mapError { error in
+                print("Meal details decoding error: \(error)")
+                if let error = error as? DecodingError {
+                    print("Detailed decoding error: \(error.localizedDescription)")
+                    return APIError.decodingError(error)
+                } else {
+                    return APIError.serverError(error.localizedDescription)
+                }
+            }
+            .eraseToAnyPublisher()
+    }
     
     func addMeal(request: MealRequest) -> AnyPublisher<MealResponse, APIError> {
         let timestamp = getCurrentTimestamp()
