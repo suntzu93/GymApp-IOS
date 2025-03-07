@@ -37,6 +37,15 @@ class APIService {
         jsonEncoder.keyEncodingStrategy = .convertToSnakeCase
     }
     
+    // Helper method to get current timestamp in ISO 8601 format without milliseconds
+    private func getCurrentTimestamp() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone.current
+        return formatter.string(from: Date())
+    }
+    
     // MARK: - User API
     
     func registerUser(_ user: User) -> AnyPublisher<UserRegistrationResponse, APIError> {
@@ -46,7 +55,8 @@ class APIService {
     }
     
     func getUserInfo(userId: String) -> AnyPublisher<User, APIError> {
-        let endpoint = "\(baseURL)/users/\(userId)"
+        let timestamp = getCurrentTimestamp()
+        let endpoint = "\(baseURL)/users/\(userId)?client_timestamp=\(timestamp)"
         
         return makeGetRequest(to: endpoint)
             .tryMap { (response: [String: User]) -> User in
@@ -67,9 +77,10 @@ class APIService {
     // MARK: - Food API
     
     func getFoodList(country: String, city: String) -> AnyPublisher<FoodListResponse, APIError> {
+        let timestamp = getCurrentTimestamp()
         let encodedCountry = country.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
         let encodedCity = city.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        let endpoint = "\(baseURL)/food/list?country=\(encodedCountry)&city=\(encodedCity)"
+        let endpoint = "\(baseURL)/food/list?country=\(encodedCountry)&city=\(encodedCity)&client_timestamp=\(timestamp)"
         
         print("Fetching food list from: \(endpoint)")
         
@@ -107,8 +118,9 @@ class APIService {
     }
     
     func searchFood(query: String) -> AnyPublisher<FoodSearchResponse, APIError> {
+        let timestamp = getCurrentTimestamp()
         let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        let endpoint = "\(baseURL)/food/search?q=\(encodedQuery)"
+        let endpoint = "\(baseURL)/food/search?q=\(encodedQuery)&client_timestamp=\(timestamp)"
         
         print("Searching food with query: \(endpoint)")
         
@@ -147,11 +159,12 @@ class APIService {
     
     func saveFoodPreference(userId: String, foodId: String, preference: FoodPreference) -> AnyPublisher<[String: Bool], APIError> {
         // Convert string IDs to integers
+        let timestamp = getCurrentTimestamp()
         let userIdInt = Int(userId) ?? 0
         let foodIdInt = Int(foodId) ?? 0
         
         // Build the endpoint with query parameters
-        let endpoint = "\(baseURL)/ai/preferences?user_id=\(userIdInt)&food_id=\(foodIdInt)&preference=\(preference.rawValue)"
+        let endpoint = "\(baseURL)/ai/preferences?user_id=\(userIdInt)&food_id=\(foodIdInt)&preference=\(preference.rawValue)&client_timestamp=\(timestamp)"
         
         print("Saving food preference: \(endpoint)")
         
@@ -206,7 +219,8 @@ class APIService {
     // MARK: - Meal API
     
     func addMeal(request: MealRequest) -> AnyPublisher<MealResponse, APIError> {
-        let endpoint = "\(baseURL)/meals/add"
+        let timestamp = getCurrentTimestamp()
+        let endpoint = "\(baseURL)/meals/add?client_timestamp=\(timestamp)"
         
         do {
             var requestDict: [String: Any] = [
@@ -271,8 +285,9 @@ class APIService {
     }
     
     func getMealHistory(userId: String) -> AnyPublisher<MealHistoryResponse, APIError> {
+        let timestamp = getCurrentTimestamp()
         let userIdInt = Int(userId) ?? 0
-        let endpoint = "\(baseURL)/meals/list/\(userIdInt)"
+        let endpoint = "\(baseURL)/meals/list/\(userIdInt)?client_timestamp=\(timestamp)"
         
         print("Fetching meal history from: \(endpoint)")
         
@@ -336,11 +351,13 @@ class APIService {
             .eraseToAnyPublisher()
     }
     
-    func deleteMeal(mealId: String) -> AnyPublisher<[String: String], APIError> {
+    func deleteMeal(mealId: String, userId: String) -> AnyPublisher<[String: String], APIError> {
+        let timestamp = getCurrentTimestamp()
         let mealIdInt = Int(mealId) ?? 0
-        let endpoint = "\(baseURL)/meals/\(mealIdInt)"
+        let userIdInt = Int(userId) ?? 0
+        let endpoint = "\(baseURL)/meals/\(mealIdInt)?user_id=\(userIdInt)&client_timestamp=\(timestamp)"
         
-        print("Deleting meal with ID \(mealId) at endpoint: \(endpoint)")
+        print("Deleting meal with ID \(mealId) for user \(userId) at endpoint: \(endpoint)")
         
         guard let url = URL(string: endpoint) else {
             print("Invalid URL for deleting meal: \(endpoint)")
@@ -408,8 +425,9 @@ class APIService {
     // MARK: - AI API
     
     func getFoodNutrition(foodName: String, userId: String, portion: Double = 100.0) -> AnyPublisher<FoodNutritionResponse, APIError> {
+        let timestamp = getCurrentTimestamp()
         let encodedFoodName = foodName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        let endpoint = "\(baseURL)/ai/food-nutrition?food_name=\(encodedFoodName)&user_id=\(userId)&portion=\(portion)"
+        let endpoint = "\(baseURL)/ai/food-nutrition?food_name=\(encodedFoodName)&user_id=\(userId)&portion=\(portion)&client_timestamp=\(timestamp)"
         
         print("Fetching food nutrition from: \(endpoint)")
         
@@ -443,7 +461,8 @@ class APIService {
     }
     
     func getSuggestions(userId: String) -> AnyPublisher<AISuggestionResponse, APIError> {
-        let endpoint = "\(baseURL)/ai/suggest?user_id=\(userId)"
+        let timestamp = getCurrentTimestamp()
+        let endpoint = "\(baseURL)/ai/suggest?user_id=\(userId)&client_timestamp=\(timestamp)"
         print("Fetching suggestions from: \(endpoint)")
         
         guard let url = URL(string: endpoint) else {
@@ -493,7 +512,21 @@ class APIService {
     }
     
     private func makePostRequest<T: Encodable, U: Decodable>(to endpoint: String, with body: T) -> AnyPublisher<U, APIError> {
-        guard let url = URL(string: endpoint) else {
+        let timestamp = getCurrentTimestamp()
+        var finalEndpoint = endpoint
+        
+        // Add client_timestamp to the endpoint URL
+        if let url = URL(string: endpoint), var components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
+            var queryItems = components.queryItems ?? []
+            queryItems.append(URLQueryItem(name: "client_timestamp", value: timestamp))
+            components.queryItems = queryItems
+            
+            if let updatedURL = components.url {
+                finalEndpoint = updatedURL.absoluteString
+            }
+        }
+        
+        guard let url = URL(string: finalEndpoint) else {
             return Fail(error: APIError.invalidURL).eraseToAnyPublisher()
         }
         

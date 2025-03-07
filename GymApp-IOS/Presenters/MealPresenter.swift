@@ -233,7 +233,7 @@ class MealPresenter: ObservableObject {
         isLoading = true
         error = nil
         
-        apiService.deleteMeal(mealId: mealId)
+        apiService.deleteMeal(mealId: mealId, userId: userId)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 self?.isLoading = false
