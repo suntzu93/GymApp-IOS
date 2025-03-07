@@ -19,6 +19,7 @@ struct User: Codable, Identifiable {
     let dailyCarbs: Double?
     let createdAt: String
     
+    
     enum CodingKeys: String, CodingKey {
         case id, name, gender, age, weight, height, country, city, language, created_at
         case activityLevel = "activity_level"
@@ -43,11 +44,30 @@ struct UserRegistration: Codable {
     let country: String
     let city: String
     let language: String
+    let clientTimestamp: String
     
     enum CodingKeys: String, CodingKey {
         case name, gender, age, weight, height, country, city, language
         case activityLevel = "activity_level"
         case goal
+        case clientTimestamp = "client_timestamp"
+    }
+    
+    init(name: String, gender: String, age: Int, weight: Double, height: Double, activityLevel: String, goal: String, country: String, city: String, language: String) {
+        self.name = name
+        self.gender = gender
+        self.age = age
+        self.weight = weight
+        self.height = height
+        self.activityLevel = activityLevel
+        self.goal = goal
+        self.country = country
+        self.city = city
+        self.language = language
+        
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        self.clientTimestamp = formatter.string(from: Date())
     }
 }
 
@@ -64,16 +84,36 @@ struct FoodItem: Codable, Identifiable {
     let country: String
     let city: String?
     let createdAt: String?
+    let clientTimestamp: String?
     
     enum CodingKeys: String, CodingKey {
         case id, name, description, calories, protein, fat, carbs, country, city
         case portionSize = "portion_size"
         case createdAt = "created_at"
+        case clientTimestamp = "client_timestamp"
+    }
+    
+    init(id: Int, name: String, description: String? = nil, calories: Int, protein: Double, fat: Double, carbs: Double, portionSize: Double, country: String, city: String? = nil) {
+        self.id = id
+        self.name = name
+        self.description = description
+        self.calories = calories
+        self.protein = protein
+        self.fat = fat
+        self.carbs = carbs
+        self.portionSize = portionSize
+        self.country = country
+        self.city = city
+        self.createdAt = nil
+        
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        self.clientTimestamp = formatter.string(from: Date())
     }
 }
 
 // Meal model
-struct Meal: Codable, Identifiable {
+struct Meal: Codable, Identifiable, CustomStringConvertible {
     let id: Int
     let userId: Int
     let mealName: String
@@ -83,6 +123,7 @@ struct Meal: Codable, Identifiable {
     let totalCarbs: Double
     let createdAt: String
     let items: [MealItem]?
+    let clientTimestamp: String?
     
     enum CodingKeys: String, CodingKey {
         case id
@@ -94,6 +135,12 @@ struct Meal: Codable, Identifiable {
         case totalCarbs = "total_carbs"
         case createdAt = "created_at"
         case items
+        case clientTimestamp = "client_timestamp"
+    }
+    
+    // Add a description for better debugging
+    var description: String {
+        return "Meal(id: \(id), userId: \(userId), mealName: \(mealName), totalCalories: \(totalCalories))"
     }
 }
 
@@ -179,11 +226,23 @@ struct AddMealRequest: Codable {
     let userId: Int
     let mealName: String
     let foodItems: [AddMealFoodItem]
+    let clientTimestamp: String
     
     enum CodingKeys: String, CodingKey {
         case userId = "user_id"
         case mealName = "meal_name"
         case foodItems = "food_items"
+        case clientTimestamp = "client_timestamp"
+    }
+    
+    init(userId: Int, mealName: String, foodItems: [AddMealFoodItem]) {
+        self.userId = userId
+        self.mealName = mealName
+        self.foodItems = foodItems
+        
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        self.clientTimestamp = formatter.string(from: Date())
     }
 }
 

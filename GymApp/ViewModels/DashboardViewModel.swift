@@ -111,18 +111,35 @@ class DashboardViewModel: ObservableObject {
     }
     
     func deleteMeal(mealId: Int) {
-        APIService.shared.deleteMeal(mealId: mealId)
+        // Debug: Print the meals array to verify we have data
+        print("DEBUG: Meals count: \(meals.count)")
+        for meal in meals {
+            print("DEBUG: Meal ID: \(meal.id), User ID: \(meal.userId)")
+        }
+        
+        guard let userId = meals.first?.userId else {
+            error = "Cannot delete meal: User ID not found"
+            print("DEBUG: Error - User ID not found in meals array")
+            return
+        }
+        
+        print("DEBUG: Deleting meal with ID: \(mealId) for user ID: \(userId)")
+        
+        // Use the updated deleteMeal method
+        APIService.shared.deleteMeal(mealId: mealId, userId: userId)
             .receive(on: DispatchQueue.main)
             .sink(
                 receiveCompletion: { [weak self] completion in
                     if case .failure(let error) = completion {
                         self?.error = error.localizedDescription
+                        print("DEBUG: Delete meal error: \(error.localizedDescription)")
+                    } else {
+                        print("DEBUG: Delete meal completion successful")
                     }
                 },
-                receiveValue: { [weak self] _ in
-                    if let userId = self?.meals.first?.userId {
-                        self?.loadData(userId: userId)
-                    }
+                receiveValue: { [weak self] response in
+                    print("DEBUG: Delete meal response: \(response)")
+                    self?.loadData(userId: userId)
                 }
             )
             .store(in: &cancellables)
