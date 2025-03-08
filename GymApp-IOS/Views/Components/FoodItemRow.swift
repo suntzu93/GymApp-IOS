@@ -59,11 +59,14 @@ struct FoodItemRow: View {
                         Spacer()
                         
                         Button(action: onAddToMeal) {
-                            Label("add_to_meal".localized, systemImage: "plus.circle")
-                                .font(.caption)
+                            Label("Add to Meal", systemImage: "plus.circle")
+                                .font(.subheadline)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
                         }
-                        .buttonStyle(.borderedProminent)
-                        .controlSize(.small)
+                        .foregroundColor(.white)
+                        .background(Color.blue)
+                        .cornerRadius(8)
                     }
                 }
                 .padding(.top, 4)

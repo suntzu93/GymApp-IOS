@@ -70,7 +70,7 @@ class FoodPresenter: ObservableObject {
             .store(in: &cancellables)
     }
     
-    func searchFood(query: String) {
+    func searchFood(query: String, country: String = "Vietnam", city: String = "Hanoi") {
         guard !query.isEmpty else {
             searchResults = []
             return
@@ -79,13 +79,14 @@ class FoodPresenter: ObservableObject {
         isLoading = true
         error = nil
         
-        apiService.searchFood(query: query)
+        apiService.searchFood(query: query, country: country, city: city)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 self?.isLoading = false
                 
                 if case .failure(let error) = completion {
                     self?.error = error.message
+                    print("Search error: \(error.message)")
                 }
             } receiveValue: { [weak self] response in
                 guard let self = self else { return }
@@ -101,8 +102,10 @@ class FoodPresenter: ObservableObject {
                     
                     // Sort with liked foods at the top
                     self.searchResults = self.sortFoodsWithLikedOnTop(updatedFoods)
+                    print("Search found \(self.searchResults.count) results")
                 } else {
                     self.error = "Failed to search foods"
+                    print("Search failed: success=false")
                 }
             }
             .store(in: &cancellables)
@@ -207,5 +210,61 @@ class FoodPresenter: ObservableObject {
                 print("Received \(response.count) suggestions")
             }
             .store(in: &cancellables)
+    }
+    
+    // MARK: - Custom Food Nutrition
+    
+    @Published var customFoodNutrition: FoodNutritionResponse?
+    @Published var isLoadingCustomFood = false
+    @Published var customFoodError: String?
+    
+    func getCustomFoodNutrition(foodName: String, userId: String, portion: Double = 100.0, mealPresenter: MealPresenter? = nil) {
+        isLoadingCustomFood = true
+        customFoodError = nil
+        
+        apiService.getFoodNutrition(foodName: foodName, userId: userId, portion: portion)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                self?.isLoadingCustomFood = false
+                
+                if case .failure(let error) = completion {
+                    self?.customFoodError = error.message
+                    print("Custom food nutrition error: \(error.message)")
+                }
+            } receiveValue: { [weak self] response in
+                guard let self = self else { return }
+                
+                print("Received custom food nutrition: \(response.foodName)")
+                self.customFoodNutrition = response
+                
+                // Create a Food object from the nutrition response
+                let customFood = self.createFoodFromNutrition(response)
+                
+                // Add the custom food to the meal if a meal presenter was provided
+                if let mealPresenter = mealPresenter {
+                    mealPresenter.addFoodToMeal(customFood, quantity: response.portion)
+                }
+            }
+            .store(in: &cancellables)
+    }
+    
+    private func createFoodFromNutrition(_ nutrition: FoodNutritionResponse) -> Food {
+        // Generate a unique ID for the custom food
+        let id = "custom_\(Date().timeIntervalSince1970)"
+        
+        // Create a Food object from the nutrition data
+        return Food(
+            id: id,
+            name: nutrition.foodName,
+            description: nutrition.standardServing,
+            calories: nutrition.calories,
+            protein: nutrition.protein,
+            fat: nutrition.fat,
+            carbs: nutrition.carbs,
+            country: "Custom",
+            city: nil,
+            createdAt: Date(),
+            isLiked: false
+        )
     }
 } 

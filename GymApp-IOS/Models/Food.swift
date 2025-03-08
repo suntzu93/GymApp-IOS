@@ -144,6 +144,9 @@ struct FoodNutritionResponse: Codable {
     var fat: Double
     var carbs: Double
     var originalPortionSize: Double
+    var standardServing: String?
+    var specifiedQuantity: String?
+    var foodDescription: String?
     
     enum CodingKeys: String, CodingKey {
         case foodName = "food_name"
@@ -154,6 +157,9 @@ struct FoodNutritionResponse: Codable {
         case fat
         case carbs
         case originalPortionSize = "original_portion_size"
+        case standardServing = "standard_serving"
+        case specifiedQuantity = "specified_quantity"
+        case foodDescription = "food_description"
     }
     
     // Add a custom initializer to handle potential type mismatches
@@ -162,6 +168,9 @@ struct FoodNutritionResponse: Codable {
         
         foodName = try container.decode(String.self, forKey: .foodName)
         source = try container.decode(String.self, forKey: .source)
+        standardServing = try container.decodeIfPresent(String.self, forKey: .standardServing)
+        specifiedQuantity = try container.decodeIfPresent(String.self, forKey: .specifiedQuantity)
+        foodDescription = try container.decodeIfPresent(String.self, forKey: .foodDescription)
         
         // Handle potential type mismatches for numeric values
         if let portionDouble = try? container.decode(Double.self, forKey: .portion) {

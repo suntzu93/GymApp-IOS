@@ -5,6 +5,10 @@ struct FoodListView: View {
     @EnvironmentObject var userPresenter: UserPresenter
     @EnvironmentObject var foodPresenter: FoodPresenter
     @EnvironmentObject var mealPresenter: MealPresenter
+    @Environment(\.presentationMode) var presentationMode
+    
+    // Parameter to determine if we're selecting foods for a meal
+    var isSelecting: Bool = false
     
     @State private var searchText = ""
     @State private var isSearching = false
@@ -15,33 +19,57 @@ struct FoodListView: View {
             ZStack {
                 VStack {
                     // Search Bar
-                    HStack {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundColor(.secondary)
-                        
-                        TextField("search_food".localized, text: $searchText)
-                            .onChange(of: searchText) { newValue in
-                                if newValue.isEmpty {
-                                    isSearching = false
-                                } else {
-                                    isSearching = true
-                                    foodPresenter.searchFood(query: newValue)
+                    HStack(spacing: 8) {
+                        HStack {
+                            Image(systemName: "magnifyingglass")
+                                .foregroundColor(.secondary)
+                                .padding(.leading, 8)
+                            
+                            TextField("search_food".localized, text: $searchText)
+                                .padding(.vertical, 10)
+                                .onChange(of: searchText) { newValue in
+                                    if newValue.isEmpty && isSearching {
+                                        // Reset to show all foods when search text is cleared
+                                        isSearching = false
+                                        if let user = userPresenter.user {
+                                            foodPresenter.fetchFoodList(country: user.country, city: user.city)
+                                        }
+                                    }
                                 }
+                        }
+                        .background(Color(uiColor: .systemGray6))
+                        .cornerRadius(10)
+                        
+                        Button(action: {
+                            if !searchText.isEmpty {
+                                isSearching = true
+                                foodPresenter.searchFood(query: searchText)
                             }
+                        }) {
+                            Text("Search")
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 10)
+                                .background(searchText.isEmpty ? Color.gray : Color.blue)
+                                .cornerRadius(10)
+                        }
+                        .disabled(searchText.isEmpty)
                         
                         if !searchText.isEmpty {
                             Button(action: {
                                 searchText = ""
                                 isSearching = false
+                                // Reset to show all foods when search is cleared
+                                if let user = userPresenter.user {
+                                    foodPresenter.fetchFoodList(country: user.country, city: user.city)
+                                }
                             }) {
                                 Image(systemName: "xmark.circle.fill")
                                     .foregroundColor(.secondary)
+                                    .padding(10)
                             }
                         }
                     }
-                    .padding(10)
-                    .background(Color(uiColor: .systemGray6))
-                    .cornerRadius(10)
                     .padding(.horizontal)
                     
                     if foodPresenter.isLoading {
@@ -72,6 +100,7 @@ struct FoodListView: View {
                                         ForEach(foodPresenter.searchResults) { food in
                                             FoodItemRow(
                                                 food: food,
+                                                showActions: true,
                                                 onAddToFavorites: {
                                                     if let userId = userPresenter.user?.id {
                                                         foodPresenter.saveFoodPreference(
@@ -82,7 +111,11 @@ struct FoodListView: View {
                                                 },
                                                 onAddToMeal: {
                                                     mealPresenter.addFoodToMeal(food)
-                                                    showingAddMealSheet = true
+                                                    if isSelecting {
+                                                        presentationMode.wrappedValue.dismiss()
+                                                    } else {
+                                                        showingAddMealSheet = true
+                                                    }
                                                 }
                                             )
                                         }
@@ -98,6 +131,7 @@ struct FoodListView: View {
                                         ForEach(foodPresenter.foods) { food in
                                             FoodItemRow(
                                                 food: food,
+                                                showActions: true,
                                                 onAddToFavorites: {
                                                     if let userId = userPresenter.user?.id {
                                                         foodPresenter.saveFoodPreference(
@@ -108,7 +142,11 @@ struct FoodListView: View {
                                                 },
                                                 onAddToMeal: {
                                                     mealPresenter.addFoodToMeal(food)
-                                                    showingAddMealSheet = true
+                                                    if isSelecting {
+                                                        presentationMode.wrappedValue.dismiss()
+                                                    } else {
+                                                        showingAddMealSheet = true
+                                                    }
                                                 }
                                             )
                                         }
@@ -119,7 +157,7 @@ struct FoodListView: View {
                         }
                     }
                 }
-                .navigationTitle("food_list_title".localized)
+                .navigationTitle(isSelecting ? "Select Food" : "food_list_title".localized)
                 .onAppear {
                     if let user = userPresenter.user {
                         foodPresenter.fetchFoodList(country: user.country, city: user.city)

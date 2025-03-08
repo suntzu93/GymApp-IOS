@@ -117,10 +117,12 @@ class APIService {
             .eraseToAnyPublisher()
     }
     
-    func searchFood(query: String) -> AnyPublisher<FoodSearchResponse, APIError> {
+    func searchFood(query: String, country: String = "Vietnam", city: String = "Hanoi", limit: Int = 10) -> AnyPublisher<FoodListResponse, APIError> {
         let timestamp = getCurrentTimestamp()
         let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        let endpoint = "\(baseURL)/food/search?q=\(encodedQuery)&client_timestamp=\(timestamp)"
+        let encodedCountry = country.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        let encodedCity = city.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        let endpoint = "\(baseURL)/food/list?country=\(encodedCountry)&city=\(encodedCity)&search=\(encodedQuery)&limit=\(limit)&client_timestamp=\(timestamp)"
         
         print("Searching food with query: \(endpoint)")
         
@@ -141,9 +143,9 @@ class APIService {
                 return data
             }
             .decode(type: [Food].self, decoder: customDecoder)
-            .map { foods -> FoodSearchResponse in
+            .map { foods -> FoodListResponse in
                 // Convert the array response to our expected format
-                return FoodSearchResponse(success: true, data: foods)
+                return FoodListResponse(success: true, data: foods)
             }
             .mapError { error in
                 print("Food search decoding error: \(error)")

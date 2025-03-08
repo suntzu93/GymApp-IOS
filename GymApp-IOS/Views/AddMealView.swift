@@ -20,6 +20,24 @@ struct AddMealView: View {
     @State private var customFoodFat = ""
     @State private var customFoodCarbs = ""
     
+    // Function to determine meal type based on current time
+    private func determineMealTypeFromTime() -> MealType {
+        let hour = Calendar.current.component(.hour, from: Date())
+        
+        switch hour {
+        case 5..<11:  // 5:00 AM - 10:59 AM
+            return .breakfast
+        case 11..<15: // 11:00 AM - 2:59 PM
+            return .lunch
+        case 15..<18: // 3:00 PM - 5:59 PM
+            return .snack
+        case 18..<22: // 6:00 PM - 9:59 PM
+            return .dinner
+        default:      // Late night or early morning
+            return .snack
+        }
+    }
+    
     var body: some View {
         NavigationView {
             ZStack {
@@ -27,8 +45,16 @@ struct AddMealView: View {
                     VStack(spacing: 20) {
                         // Meal Type Picker
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("Meal Type")
-                                .font(.headline)
+                            HStack {
+                                Text("Meal Type")
+                                    .font(.headline)
+                                
+                                Spacer()
+                                
+                                Text("Auto-selected based on time")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
                             
                             Picker("Meal Type", selection: $selectedMealType) {
                                 ForEach(MealType.allCases, id: \.self) { mealType in
@@ -156,13 +182,17 @@ struct AddMealView: View {
                 }
             )
             .sheet(isPresented: $showingFoodList) {
-                FoodListView()
+                FoodListView(isSelecting: true)
             }
             .sheet(isPresented: $showingCustomFoodSheet) {
                 CustomFoodView(isPresented: $showingCustomFoodSheet)
             }
             .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("MealAddedSuccessfully"))) { _ in
                 presentationMode.wrappedValue.dismiss()
+            }
+            .onAppear {
+                // Set the default meal type based on current time
+                selectedMealType = determineMealTypeFromTime()
             }
         }
     }
@@ -237,6 +267,7 @@ struct CustomFoodView: View {
     @State private var protein = ""
     @State private var fat = ""
     @State private var carbs = ""
+    @State private var foodDescription = ""
     @State private var isLoading = false
     @State private var showError = false
     @State private var errorMessage = ""
@@ -262,6 +293,13 @@ struct CustomFoodView: View {
                                 }
                                 .disabled(isLoading || foodName.isEmpty)
                             }
+                        }
+                        
+                        if !foodDescription.isEmpty {
+                            Text(foodDescription)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                                .padding(.vertical, 4)
                         }
                         
                         HStack {
@@ -358,6 +396,14 @@ struct CustomFoodView: View {
                 protein = String(format: "%.1f", response.protein)
                 fat = String(format: "%.1f", response.fat)
                 carbs = String(format: "%.1f", response.carbs)
+                
+                // Set the food description if available
+                if let description = response.foodDescription {
+                    foodDescription = description
+                } else if let serving = response.standardServing {
+                    foodDescription = serving
+                }
+                
                 nutritionLoaded = true
             }
             .store(in: &cancellables)
@@ -399,6 +445,7 @@ struct CustomFoodView: View {
         let customFood = Food(
             id: UUID().uuidString,
             name: foodName,
+            description: foodDescription.isEmpty ? nil : foodDescription,
             calories: caloriesValue,
             protein: proteinValue,
             fat: fatValue,
