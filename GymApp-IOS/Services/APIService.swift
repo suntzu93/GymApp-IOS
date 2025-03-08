@@ -74,6 +74,101 @@ class APIService {
             .eraseToAnyPublisher()
     }
     
+    func updateUser(userId: String, update: UserUpdate) -> AnyPublisher<User, APIError> {
+        let timestamp = getCurrentTimestamp()
+        let endpoint = "\(baseURL)/users/\(userId)?client_timestamp=\(timestamp)"
+        
+        var request = URLRequest(url: URL(string: endpoint)!)
+        request.httpMethod = "PUT"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        do {
+            let jsonData = try jsonEncoder.encode(update)
+            request.httpBody = jsonData
+            
+            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                print("Update user request: \(jsonString)")
+            }
+        } catch {
+            return Fail(error: APIError.decodingError(error)).eraseToAnyPublisher()
+        }
+        
+        return URLSession.shared.dataTaskPublisher(for: request)
+            .mapError { APIError.networkError($0) }
+            .map { data, response -> Data in
+                if let jsonString = String(data: data, encoding: .utf8) {
+                    print("Raw update user response: \(jsonString)")
+                }
+                return data
+            }
+            .tryMap { data -> User in
+                // Try to decode the response directly
+                do {
+                    // First try to decode as UserRegistrationResponse
+                    let response = try JSONDecoder().decode(UserRegistrationResponse.self, from: data)
+                    return response.toUser()
+                } catch {
+                    print("Failed to decode as UserRegistrationResponse: \(error)")
+                    
+                    // If that fails, try to decode directly as User
+                    do {
+                        return try JSONDecoder().decode(User.self, from: data)
+                    } catch {
+                        print("Failed to decode as User: \(error)")
+                        
+                        // If both fail, try to manually create a User from the JSON
+                        if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                            // Extract values from JSON
+                            let id = String(describing: json["id"] ?? "")
+                            let name = json["name"] as? String ?? ""
+                            let genderStr = json["gender"] as? String ?? "Male"
+                            let age = json["age"] as? Int ?? 0
+                            let weight = json["weight"] as? Double ?? 0.0
+                            let height = json["height"] as? Double ?? 0.0
+                            let activityLevelStr = json["activity_level"] as? String ?? "Medium"
+                            let goalStr = json["goal"] as? String ?? "Maintain"
+                            let country = json["country"] as? String ?? ""
+                            let city = json["city"] as? String ?? ""
+                            let languageStr = json["language"] as? String ?? "en"
+                            let dailyCalories = json["daily_calories"] as? Int ?? 0
+                            let dailyProtein = json["daily_protein"] as? Double ?? 0.0
+                            let dailyFat = json["daily_fat"] as? Double ?? 0.0
+                            let dailyCarbs = json["daily_carbs"] as? Double ?? 0.0
+                            
+                            // Create User object
+                            return User(
+                                id: id,
+                                name: name,
+                                gender: Gender(rawValue: genderStr) ?? .male,
+                                age: age,
+                                weight: weight,
+                                height: height,
+                                activityLevel: ActivityLevel(rawValue: activityLevelStr) ?? .medium,
+                                goal: Goal(rawValue: goalStr) ?? .maintain,
+                                country: country,
+                                city: city,
+                                language: Language(rawValue: languageStr) ?? .english,
+                                dailyCalories: dailyCalories,
+                                dailyProtein: dailyProtein,
+                                dailyFat: dailyFat,
+                                dailyCarbs: dailyCarbs
+                            )
+                        }
+                        
+                        throw APIError.decodingError(error)
+                    }
+                }
+            }
+            .mapError { error in
+                if let apiError = error as? APIError {
+                    return apiError
+                } else {
+                    return APIError.serverError(error.localizedDescription)
+                }
+            }
+            .eraseToAnyPublisher()
+    }
+    
     // MARK: - Food API
     
     func getFoodList(country: String, city: String) -> AnyPublisher<FoodListResponse, APIError> {

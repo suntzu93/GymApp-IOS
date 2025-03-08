@@ -101,4 +101,35 @@ class UserPresenter: ObservableObject {
         UserDefaults.standard.removeObject(forKey: "userId")
         UserDefaults.standard.removeObject(forKey: "userData")
     }
+    
+    func updateUser(update: UserUpdate, onComplete: ((Bool) -> Void)? = nil) {
+        guard let userId = user?.id else {
+            error = "User ID not available"
+            onComplete?(false)
+            return
+        }
+        
+        isLoading = true
+        error = nil
+        
+        apiService.updateUser(userId: userId, update: update)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                self?.isLoading = false
+                
+                if case .failure(let error) = completion {
+                    self?.error = error.message
+                    print("Update user error: \(error.message)")
+                    onComplete?(false)
+                }
+            } receiveValue: { [weak self] updatedUser in
+                guard let self = self else { return }
+                
+                print("User updated successfully")
+                self.user = updatedUser
+                self.saveUserToDefaults(updatedUser)
+                onComplete?(true)
+            }
+            .store(in: &cancellables)
+    }
 } 

@@ -5,6 +5,7 @@ struct ProfileView: View {
     @EnvironmentObject var mealPresenter: MealPresenter
     @State private var showingLanguagePicker = false
     @State private var selectedLanguage = AppLanguage.current
+    @State private var showingEditProfile = false
     
     var body: some View {
         NavigationView {
@@ -132,8 +133,16 @@ struct ProfileView: View {
                 }
             }
             .navigationTitle("profile_title".localized)
+            .navigationBarItems(trailing: 
+                Button("Edit") {
+                    showingEditProfile = true
+                }
+            )
             .onAppear {
                 if let userId = userPresenter.user?.id {
+                    // Refresh user data to get updated nutrition targets
+                    userPresenter.fetchUserInfo(userId: userId)
+                    // Fetch meal history
                     mealPresenter.fetchMealHistory(userId: userId)
                 }
             }
@@ -147,6 +156,9 @@ struct ProfileView: View {
                         }
                     } + [.cancel()]
                 )
+            }
+            .sheet(isPresented: $showingEditProfile) {
+                EditProfileView()
             }
         }
     }

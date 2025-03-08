@@ -90,4 +90,34 @@ struct UserRegistrationResponse: Codable {
             createdAt: ISO8601DateFormatter().date(from: createdAt)
         )
     }
+}
+
+// Model for updating user information
+struct UserUpdate: Codable {
+    var name: String?
+    var gender: Gender?
+    var age: Int?
+    var weight: Double?
+    var height: Double?
+    var activityLevel: ActivityLevel?
+    var goal: Goal?
+    var country: String?
+    var city: String?
+    var language: Language?
+    
+    // Create from User model
+    static func fromUser(_ user: User) -> UserUpdate {
+        return UserUpdate(
+            name: user.name,
+            gender: user.gender,
+            age: user.age,
+            weight: user.weight,
+            height: user.height,
+            activityLevel: user.activityLevel,
+            goal: user.goal,
+            country: user.country,
+            city: user.city,
+            language: user.language
+        )
+    }
 } 
