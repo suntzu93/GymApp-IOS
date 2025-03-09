@@ -162,7 +162,8 @@ class MealPresenter: ObservableObject {
                     calories: food.calories,
                     protein: food.protein,
                     fat: food.fat,
-                    carbs: food.carbs
+                    carbs: food.carbs,
+                    foodName: food.name
                 )
             } else {
                 // Scale based on quantity for manually added foods
@@ -175,7 +176,8 @@ class MealPresenter: ObservableObject {
                     calories: Int(Double(food.calories) * ratio),
                     protein: food.protein * ratio,
                     fat: food.fat * ratio,
-                    carbs: food.carbs * ratio
+                    carbs: food.carbs * ratio,
+                    foodName: food.name
                 )
             }
         }

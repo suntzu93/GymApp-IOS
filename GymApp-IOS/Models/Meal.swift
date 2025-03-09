@@ -30,32 +30,23 @@ struct MealItem: Codable, Identifiable {
 }
 
 struct MealRequest: Codable {
-    var userId: Int
-    var mealName: String
-    var totalCalories: Int
-    var totalProtein: Double
-    var totalFat: Double
-    var totalCarbs: Double
-    var items: [MealItem]
+    let userId: Int
+    let mealName: String
+    let totalCalories: Int
+    let totalProtein: Double
+    let totalFat: Double
+    let totalCarbs: Double
+    let items: [MealItem]
     
     struct MealItem: Codable {
-        var foodId: Int
-        var quantity: Double
-        var portionSize: Double
-        var calories: Int
-        var protein: Double
-        var fat: Double
-        var carbs: Double
-        
-        enum CodingKeys: String, CodingKey {
-            case foodId = "food_id"
-            case quantity
-            case portionSize = "portion_size"
-            case calories
-            case protein
-            case fat
-            case carbs
-        }
+        let foodId: Int
+        let quantity: Double
+        let portionSize: Double
+        let calories: Int
+        let protein: Double
+        let fat: Double
+        let carbs: Double
+        let foodName: String?
     }
     
     enum CodingKeys: String, CodingKey {
