@@ -144,7 +144,7 @@ class APIService {
                                 weight: weight,
                                 height: height,
                                 activityLevel: ActivityLevel(rawValue: activityLevelStr) ?? .medium,
-                                goal: Goal(rawValue: goalStr) ?? .maintain,
+                                goal: Goal.fromString(goalStr),
                                 country: country,
                                 city: city,
                                 language: Language(rawValue: languageStr) ?? .english,
@@ -620,6 +620,17 @@ class APIService {
                 }
             }
             .eraseToAnyPublisher()
+    }
+    
+    // MARK: - Meal Plan API
+    
+    func getDailyMealPlan(userId: String) -> AnyPublisher<MealPlanResponse, APIError> {
+        let timestamp = getCurrentTimestamp()
+        let endpoint = "\(baseURL)/meals/daily-plan/\(userId)?client_timestamp=\(timestamp)"
+        
+        print("Fetching daily meal plan from: \(endpoint)")
+        
+        return makeGetRequest(to: endpoint)
     }
     
     // MARK: - Generic Network Methods

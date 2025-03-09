@@ -12,6 +12,7 @@
 "daily_tab" = "Daily";
 "food_tab" = "Foods";
 "profile_tab" = "Profile";
+"meals_tab" = "Meals";
 
 // Onboarding
 "onboarding_title" = "Welcome to Gym Nutrition";

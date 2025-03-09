@@ -11,10 +11,78 @@ enum ActivityLevel: String, Codable, CaseIterable {
     case high = "High"
 }
 
-enum Goal: String, Codable, CaseIterable {
-    case gain = "Gain"
-    case maintain = "Maintain"
-    case lose = "Lose"
+enum Goal: Codable, Equatable, Hashable {
+    case gain
+    case maintain
+    case lose
+    case custom(String)
+    
+    var rawValue: String {
+        switch self {
+        case .gain:
+            return "Gain"
+        case .maintain:
+            return "Maintain"
+        case .lose:
+            return "Lose"
+        case .custom(let value):
+            return value
+        }
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let value = try container.decode(String.self)
+        
+        switch value {
+        case "Gain":
+            self = .gain
+        case "Maintain":
+            self = .maintain
+        case "Lose":
+            self = .lose
+        default:
+            self = .custom(value)
+        }
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(self.rawValue)
+    }
+    
+    // Add hash(into:) method for Hashable conformance
+    func hash(into hasher: inout Hasher) {
+        switch self {
+        case .gain:
+            hasher.combine(0)
+        case .maintain:
+            hasher.combine(1)
+        case .lose:
+            hasher.combine(2)
+        case .custom(let value):
+            hasher.combine(3)
+            hasher.combine(value)
+        }
+    }
+    
+    static var allCases: [Goal] {
+        return [.gain, .maintain, .lose]
+    }
+    
+    // Static method to create a Goal from a string
+    static func fromString(_ string: String) -> Goal {
+        switch string {
+        case "Gain":
+            return .gain
+        case "Maintain":
+            return .maintain
+        case "Lose":
+            return .lose
+        default:
+            return .custom(string)
+        }
+    }
 }
 
 enum Language: String, Codable, CaseIterable {
@@ -79,7 +147,7 @@ struct UserRegistrationResponse: Codable {
             weight: weight,
             height: height,
             activityLevel: ActivityLevel(rawValue: activityLevel) ?? .medium,
-            goal: Goal(rawValue: goal) ?? .maintain,
+            goal: Goal.fromString(goal),
             country: country,
             city: city,
             language: Language(rawValue: language) ?? .english,

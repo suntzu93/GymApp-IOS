@@ -20,6 +20,12 @@ struct AddMealView: View {
     @State private var customFoodFat = ""
     @State private var customFoodCarbs = ""
     
+    // Initializer to set the initial meal type
+    init(initialMealType: MealType = .breakfast, fromSuggestions: Bool = false) {
+        self._selectedMealType = State(initialValue: initialMealType)
+        self.fromSuggestions = fromSuggestions
+    }
+    
     // Function to determine meal type based on current time
     private func determineMealTypeFromTime() -> MealType {
         let hour = Calendar.current.component(.hour, from: Date())

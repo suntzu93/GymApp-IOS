@@ -19,8 +19,23 @@ class MealPresenter: ObservableObject {
     @Published var isFetchingMealDetail = false
     @Published var mealDetailError: String?
     
+    // Meal Plan properties
+    @Published var mealPlan: MealPlanResponse?
+    @Published var isFetchingMealPlan = false
+    @Published var mealPlanError: String?
+    @Published var lastMealPlanFetchDate: Date?
+    
     private let apiService = APIService.shared
     public var cancellables = Set<AnyCancellable>()
+    
+    // Cache keys
+    private let mealPlanCacheKey = "cached_meal_plan"
+    private let mealPlanDateCacheKey = "cached_meal_plan_date"
+    
+    init() {
+        // Load cached meal plan data on initialization
+        loadCachedMealPlan()
+    }
     
     struct DailyNutrition {
         var consumedCalories: Int = 0
@@ -28,6 +43,44 @@ class MealPresenter: ObservableObject {
         var consumedFat: Double = 0
         var consumedCarbs: Double = 0
     }
+    
+    // MARK: - Caching Methods
+    
+    private func loadCachedMealPlan() {
+        if let cachedData = UserDefaults.standard.data(forKey: mealPlanCacheKey) {
+            do {
+                let decoder = JSONDecoder()
+                let cachedMealPlan = try decoder.decode(MealPlanResponse.self, from: cachedData)
+                self.mealPlan = cachedMealPlan
+                
+                if let dateData = UserDefaults.standard.object(forKey: mealPlanDateCacheKey) as? Date {
+                    self.lastMealPlanFetchDate = dateData
+                }
+                
+                print("Loaded cached meal plan data")
+            } catch {
+                print("Error decoding cached meal plan: \(error)")
+            }
+        }
+    }
+    
+    private func cacheMealPlan(_ mealPlan: MealPlanResponse) {
+        do {
+            let encoder = JSONEncoder()
+            let data = try encoder.encode(mealPlan)
+            UserDefaults.standard.set(data, forKey: mealPlanCacheKey)
+            
+            let currentDate = Date()
+            UserDefaults.standard.set(currentDate, forKey: mealPlanDateCacheKey)
+            self.lastMealPlanFetchDate = currentDate
+            
+            print("Cached meal plan data")
+        } catch {
+            print("Error caching meal plan: \(error)")
+        }
+    }
+    
+    // MARK: - Meal Methods
     
     func addFoodToMeal(_ food: Food, quantity: Double = 100) {
         if !selectedFoods.contains(where: { $0.id == food.id }) {
@@ -42,7 +95,10 @@ class MealPresenter: ObservableObject {
     }
     
     func updateQuantity(for food: Food, quantity: Double) {
-        quantities[food.id] = quantity
+        // Only update the quantity if this food doesn't have the _no_scale flag
+        if quantities[food.id + "_no_scale"] == nil {
+            quantities[food.id] = quantity
+        }
     }
     
     func calculateMealNutrition() -> (calories: Int, protein: Double, fat: Double, carbs: Double) {
@@ -53,12 +109,23 @@ class MealPresenter: ObservableObject {
         
         for food in selectedFoods {
             let quantity = quantities[food.id] ?? 100
-            let ratio = quantity / 100.0
             
-            totalCalories += Int(Double(food.calories) * ratio)
-            totalProtein += food.protein * ratio
-            totalFat += food.fat * ratio
-            totalCarbs += food.carbs * ratio
+            // Check if this food should not be scaled (comes from meal plan)
+            if quantities[food.id + "_no_scale"] != nil {
+                // Use the values directly without scaling
+                totalCalories += food.calories
+                totalProtein += food.protein
+                totalFat += food.fat
+                totalCarbs += food.carbs
+            } else {
+                // Scale based on quantity for manually added foods
+                let ratio = quantity / 100.0
+                
+                totalCalories += Int(Double(food.calories) * ratio)
+                totalProtein += food.protein * ratio
+                totalFat += food.fat * ratio
+                totalCarbs += food.carbs * ratio
+            }
         }
         
         return (totalCalories, totalProtein, totalFat, totalCarbs)
@@ -84,17 +151,33 @@ class MealPresenter: ObservableObject {
         let mealItems = selectedFoods.map { food in
             let foodIdInt = Int(food.id) ?? 0
             let quantity = quantities[food.id] ?? 100
-            let ratio = quantity / 100.0
             
-            return MealRequest.MealItem(
-                foodId: foodIdInt,
-                quantity: quantity,
-                portionSize: 100.0,
-                calories: Int(Double(food.calories) * ratio),
-                protein: food.protein * ratio,
-                fat: food.fat * ratio,
-                carbs: food.carbs * ratio
-            )
+            // Check if this food should not be scaled (comes from meal plan)
+            if quantities[food.id + "_no_scale"] != nil {
+                // Use the values directly without scaling
+                return MealRequest.MealItem(
+                    foodId: foodIdInt,
+                    quantity: quantity,
+                    portionSize: 100.0,
+                    calories: food.calories,
+                    protein: food.protein,
+                    fat: food.fat,
+                    carbs: food.carbs
+                )
+            } else {
+                // Scale based on quantity for manually added foods
+                let ratio = quantity / 100.0
+                
+                return MealRequest.MealItem(
+                    foodId: foodIdInt,
+                    quantity: quantity,
+                    portionSize: 100.0,
+                    calories: Int(Double(food.calories) * ratio),
+                    protein: food.protein * ratio,
+                    fat: food.fat * ratio,
+                    carbs: food.carbs * ratio
+                )
+            }
         }
         
         let mealRequest = MealRequest(
@@ -303,5 +386,62 @@ class MealPresenter: ObservableObject {
                 self.selectedMealDetail = response
             }
             .store(in: &cancellables)
+    }
+    
+    func fetchDailyMealPlan(userId: String, forceRefresh: Bool = false) {
+        // If we're not forcing a refresh and we already have data, don't fetch again
+        if !forceRefresh && mealPlan != nil {
+            print("Using existing meal plan data")
+            return
+        }
+        
+        isFetchingMealPlan = true
+        mealPlanError = nil
+        
+        apiService.getDailyMealPlan(userId: userId)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                self?.isFetchingMealPlan = false
+                
+                if case .failure(let error) = completion {
+                    self?.mealPlanError = error.message
+                    print("Error fetching meal plan: \(error.message)")
+                }
+            } receiveValue: { [weak self] response in
+                guard let self = self else { return }
+                
+                print("Successfully received meal plan")
+                self.mealPlan = response
+                
+                // Cache the meal plan data
+                self.cacheMealPlan(response)
+            }
+            .store(in: &cancellables)
+    }
+    
+    func addFoodFromMealPlan(_ food: MealPlanResponse.MealFood) {
+        // Extract quantity from string (e.g., "100g" -> 100.0)
+        let quantityString = food.quantity.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+        let quantity = Double(quantityString) ?? 100.0
+        
+        // Convert MealFood to Food - use the values directly without assuming they're per 100g
+        let newFood = Food(
+            id: UUID().uuidString, // Generate a temporary ID
+            name: food.name,
+            calories: food.calories,
+            protein: food.protein,
+            fat: food.fat,
+            carbs: food.carbs,
+            country: "",
+            city: ""
+        )
+        
+        // Add to selected foods with the exact quantity from the meal plan
+        // This ensures we don't scale the nutritional values
+        addFoodToMeal(newFood, quantity: quantity)
+        
+        // Override the default scaling behavior in the quantities dictionary
+        // by setting a special flag to indicate this food's values should not be scaled
+        quantities[newFood.id + "_no_scale"] = 1.0
     }
 } 

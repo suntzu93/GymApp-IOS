@@ -27,11 +27,17 @@ struct ContentView: View {
                         }
                         .tag(1)
                     
+                    MealPlanView()
+                        .tabItem {
+                            Label("meals_tab".localized, systemImage: "fork.knife")
+                        }
+                        .tag(2)
+                    
                     ProfileView()
                         .tabItem {
                             Label("profile_tab".localized, systemImage: "person.fill")
                         }
-                        .tag(2)
+                        .tag(3)
                 }
                 .accentColor(.blue)
             } else {

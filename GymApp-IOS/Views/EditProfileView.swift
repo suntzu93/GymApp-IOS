@@ -10,7 +10,7 @@ struct EditProfileView: View {
     @State private var weight: String = ""
     @State private var height: String = ""
     @State private var activityLevel: ActivityLevel = .medium
-    @State private var goal: Goal = .maintain
+    @State private var goalText: String = ""
     @State private var country: String = ""
     @State private var city: String = ""
     
@@ -68,10 +68,11 @@ struct EditProfileView: View {
                             }
                         }
                         
-                        Picker("Goal", selection: $goal) {
-                            ForEach(Goal.allCases, id: \.self) { goal in
-                                Text(goal.rawValue).tag(goal)
-                            }
+                        HStack {
+                            Text("Goal")
+                            Spacer()
+                            TextField("Enter your goal", text: $goalText)
+                                .multilineTextAlignment(.trailing)
                         }
                     }
                     
@@ -147,13 +148,20 @@ struct EditProfileView: View {
             weight = String(format: "%.1f", user.weight)
             height = String(format: "%.1f", user.height)
             activityLevel = user.activityLevel
-            goal = user.goal
+            goalText = user.goal.rawValue
             country = user.country
             city = user.city
         }
     }
     
     private func saveChanges() {
+        guard !goalText.isEmpty else {
+            toastMessage = "Please enter your goal"
+            toastIsSuccess = false
+            showToast = true
+            return
+        }
+        
         guard let ageInt = Int(age),
               let weightDouble = Double(weight),
               let heightDouble = Double(height) else {
@@ -161,6 +169,19 @@ struct EditProfileView: View {
             toastIsSuccess = false
             showToast = true
             return
+        }
+        
+        // Determine the goal based on the text
+        let goal: Goal
+        switch goalText.lowercased() {
+        case "gain":
+            goal = .gain
+        case "maintain":
+            goal = .maintain
+        case "lose":
+            goal = .lose
+        default:
+            goal = .custom(goalText)
         }
         
         let update = UserUpdate(

@@ -169,6 +169,10 @@ struct OnboardingView: View {
                     Text("Build muscle mass and strength")
                         .font(.caption)
                         .foregroundColor(.secondary)
+                case .custom(let customGoal):
+                    Text("Custom goal: \(customGoal)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
             }
         }

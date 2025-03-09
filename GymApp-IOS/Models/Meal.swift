@@ -316,4 +316,53 @@ struct MealDetailResponse: Codable, Identifiable {
         case createdAt = "created_at"
         case items
     }
+}
+
+// Model for daily meal plan
+struct MealPlanResponse: Codable {
+    var userInfo: UserInfo
+    var dietaryRestrictions: [String]
+    var mealPlan: MealPlan
+    var totalNutrition: NutritionTotals
+    
+    struct UserInfo: Codable {
+        var gender: String
+        var age: Int
+        var weight: Double
+        var height: Double
+        var bmi: Double
+        var goal: String
+        var country: String
+        var city: String
+    }
+    
+    struct MealPlan: Codable {
+        var dailyTotals: NutritionTotals
+        var breakfast: MealSection
+        var lunch: MealSection
+        var dinner: MealSection
+        var snacks: MealSection
+    }
+    
+    struct MealSection: Codable {
+        var foods: [MealFood]
+        var totals: NutritionTotals
+    }
+    
+    struct MealFood: Codable, Identifiable {
+        var id: String { name }
+        var name: String
+        var quantity: String
+        var calories: Int
+        var protein: Double
+        var fat: Double
+        var carbs: Double
+    }
+    
+    struct NutritionTotals: Codable {
+        var calories: Int
+        var protein: Double
+        var fat: Double
+        var carbs: Double
+    }
 } 

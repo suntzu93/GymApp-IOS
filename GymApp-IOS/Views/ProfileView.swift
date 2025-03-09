@@ -82,31 +82,6 @@ struct ProfileView: View {
                     }
                 }
                 
-                Section(header: Text("meal_history".localized)) {
-                    if mealPresenter.mealHistory.isEmpty {
-                        Text("no_meal_history".localized)
-                            .foregroundColor(.secondary)
-                    } else {
-                        ForEach(mealPresenter.mealHistory.prefix(5)) { meal in
-                            HStack {
-                                VStack(alignment: .leading) {
-                                    Text(meal.mealName)
-                                        .font(.subheadline)
-                                    
-                                    Text(formatDate(from: meal.createdAt))
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                                
-                                Spacer()
-                                
-                                Text("\(meal.totalCalories) kcal")
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                    }
-                }
-                
                 Section(header: Text("settings".localized)) {
                     Button(action: {
                         showingLanguagePicker = true
@@ -142,8 +117,6 @@ struct ProfileView: View {
                 if let userId = userPresenter.user?.id {
                     // Refresh user data to get updated nutrition targets
                     userPresenter.fetchUserInfo(userId: userId)
-                    // Fetch meal history
-                    mealPresenter.fetchMealHistory(userId: userId)
                 }
             }
             .actionSheet(isPresented: $showingLanguagePicker) {
